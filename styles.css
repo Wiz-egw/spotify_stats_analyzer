@@ -1274,113 +1274,64 @@ td:nth-child(3) {
   }
 
   .table-shell table {
-    display: block;
     width: 100%;
     min-width: 0 !important;
-    border-collapse: separate;
-    border-spacing: 0 12px;
-    background: transparent;
+    table-layout: fixed;
   }
 
-  .table-shell thead {
-    display: none;
+  .table-shell th,
+  .table-shell td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    line-height: 1.3;
+    vertical-align: top;
   }
 
-  .table-shell tbody {
-    display: grid;
-    width: 100%;
-    gap: 12px;
-  }
-
-  .table-shell tr {
-    display: grid;
-    width: 100%;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 10px 12px;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    background: var(--surface-soft);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
-  }
-
-  .table-shell tr:nth-child(even) {
-    background: var(--surface-soft);
+  .table-shell th {
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
   }
 
   .table-shell td {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: auto;
-    min-width: 0;
-    padding: 0;
-    border-bottom: 0;
-    background: none;
-    text-align: left;
     overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
-  .table-shell td::before {
-    content: attr(data-label);
-    color: var(--text-muted);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    line-height: 1.2;
-    text-transform: uppercase;
+  .table-shell .table--compact th,
+  .table-shell .table--compact td {
+    padding: 10px 11px;
   }
 
-  .table-shell td:nth-child(1) {
-    display: inline-flex;
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: start;
-    align-self: start;
-    width: fit-content;
-    padding: 0.45rem 0.65rem;
-    border-radius: 999px;
-    background: rgba(29, 185, 84, 0.12);
-    color: var(--spotify-dark);
-    font-size: 0.8rem;
-    font-weight: 800;
-    line-height: 1;
-    text-align: center;
+  .table-shell .table--compact th:nth-child(1),
+  .table-shell .table--compact td:nth-child(1) {
+    width: 8%;
   }
 
-  .table-shell td:nth-child(1)::before {
-    display: none;
-    content: "";
+  .table-shell .table--compact th:nth-child(2),
+  .table-shell .table--compact td:nth-child(2) {
+    width: 67%;
   }
 
-  .table-shell td:nth-child(2) {
-    grid-column: 2;
-    grid-row: 1;
-    min-width: 0;
+  .table-shell .table--compact th:nth-child(3),
+  .table-shell .table--compact td:nth-child(3) {
+    width: 25%;
+    text-align: right;
   }
 
-  .table-shell td:nth-child(n+3) {
-    grid-column: 1 / -1;
-    padding-top: 10px;
-    border-top: 1px solid var(--line);
-    color: var(--text-main);
-    font-size: 0.95rem;
-    font-weight: 800;
+  .table-shell .table--scroll th,
+  .table-shell .table--scroll td {
+    padding: 9px 10px;
   }
 
   .table-shell .song-link,
   .table-shell .media-label {
-    display: flex;
-    width: 100%;
-    align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
   }
 
   .table-shell .cover-art {
-    width: 44px;
-    height: 44px;
-    flex-basis: 44px;
-    border-radius: 11px;
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
   }
 
   .table-shell .stacked-label {
@@ -1389,55 +1340,28 @@ td:nth-child(3) {
 
   .table-shell .stacked-label-primary {
     overflow-wrap: anywhere;
-    line-height: 1.35;
+    line-height: 1.3;
   }
 
   .table-shell .stacked-label-secondary {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
   }
 
   .table-shell .date-cell,
   .table-shell .datetime-cell {
     white-space: normal;
     font-variant-numeric: tabular-nums;
-  }
-}
-
-@media (min-width: 721px) and (max-width: 1024px) {
-  .table-shell tr {
-    padding: 16px 18px;
-    gap: 12px 14px;
+    line-height: 1.25;
   }
 
-  .table-shell td::before {
-    font-size: 0.66rem;
-    letter-spacing: 0.06em;
-  }
-
-  .table-shell td:nth-child(1) {
-    padding: 0.5rem 0.7rem;
-  }
-
-  .table-shell td:nth-child(n+3) {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    padding-top: 8px;
-  }
-
-  .table-shell td:nth-child(n+3)::before {
-    margin-right: auto;
-  }
-
-  .table-shell .song-link,
-  .table-shell .media-label {
-    gap: 14px;
-  }
-
-  .table-shell .cover-art {
-    width: 46px;
-    height: 46px;
-    flex-basis: 46px;
+  .streak-table,
+  .artist-streak-table,
+  .daily-peak-table,
+  .table--scroll,
+  .table--compact {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
   }
 }
 
@@ -1492,22 +1416,66 @@ td:nth-child(3) {
     overflow: visible;
   }
 
-  .table-shell tr {
-    padding: 12px;
-    gap: 8px 10px;
+  .table-shell th,
+  .table-shell td {
+    padding: 8px 9px;
+    font-size: 0.78rem;
+    line-height: 1.25;
   }
 
-  .table-shell td:nth-child(1) {
-    padding: 0.4rem 0.6rem;
+  .table-shell th {
+    font-size: 0.65rem;
+    letter-spacing: 0.02em;
   }
 
-  .table-shell td:nth-child(n+3) {
-    padding-top: 8px;
+  .table-shell .table--compact th,
+  .table-shell .table--compact td {
+    padding: 8px 9px;
+  }
+
+  .table-shell .table--compact th:nth-child(1),
+  .table-shell .table--compact td:nth-child(1) {
+    width: 7%;
+  }
+
+  .table-shell .table--compact th:nth-child(2),
+  .table-shell .table--compact td:nth-child(2) {
+    width: 68%;
+  }
+
+  .table-shell .table--compact th:nth-child(3),
+  .table-shell .table--compact td:nth-child(3) {
+    width: 25%;
+    text-align: right;
+  }
+
+  .table-shell .table--scroll th,
+  .table-shell .table--scroll td {
+    padding: 7px 8px;
+  }
+
+  .table-shell .song-link,
+  .table-shell .media-label {
+    gap: 8px;
   }
 
   .table-shell .cover-art {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .table-shell .stacked-label-primary {
+    font-size: 0.82rem;
+  }
+
+  .table-shell .stacked-label-secondary {
+    font-size: 0.7rem;
+  }
+
+  .table-shell .date-cell,
+  .table-shell .datetime-cell {
+    font-size: 0.7rem;
+    line-height: 1.2;
   }
 }

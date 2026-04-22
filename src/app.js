@@ -1023,6 +1023,9 @@ function renderDailyInsightsCard(insights) {
 
 function renderTableSection(title, headers, items, rowRenderer, tableClass = "", infoText = "", sectionId = "") {
   const revealKey = sectionId || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const isCompactTable = !tableClass;
+  const tableModeClass = isCompactTable ? "table--compact" : "table--scroll";
+  const shellModeClass = isCompactTable ? "table-shell--compact" : "table-shell--scroll";
 
   return `
     <section class="table-section" ${sectionId ? `id="${escapeAttribute(sectionId)}"` : ""}>
@@ -1030,8 +1033,9 @@ function renderTableSection(title, headers, items, rowRenderer, tableClass = "",
         <h2>${escapeHtml(title)}</h2>
         ${infoText ? renderTableInfoBadge(title, infoText) : ""}
       </div>
-      <div class="${buildRevealSectionClassName("table-shell", revealKey)}" data-reveal-section="${escapeAttribute(revealKey)}">
-        <table class="${escapeAttribute(tableClass)}">
+      <div class="${buildRevealSectionClassName(`table-shell ${shellModeClass}`, revealKey)}" data-reveal-section="${escapeAttribute(revealKey)}">
+        ${isCompactTable ? "" : '<p class="table-scroll-hint">Swipe horizontally to see more columns.</p>'}
+        <table class="${escapeAttribute([tableModeClass, tableClass].filter(Boolean).join(" "))}">
           <thead>
             <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr>
           </thead>
@@ -1076,9 +1080,9 @@ function renderInfoBadge(label, infoText, className = "table-info-badge") {
 function renderSongRow(song) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(song.rank))}</td>
-      <td>${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
-      <td>${escapeHtml(song.playtime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(song.rank))}</td>
+      <td data-label="Song">${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
+      <td data-label="Playtime">${escapeHtml(song.playtime)}</td>
     </tr>
   `;
 }
@@ -1086,9 +1090,9 @@ function renderSongRow(song) {
 function renderSongCountRow(song) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(song.rank))}</td>
-      <td>${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
-      <td>${escapeHtml(song.times_played.toLocaleString())}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(song.rank))}</td>
+      <td data-label="Song">${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
+      <td data-label="Play Count">${escapeHtml(song.times_played.toLocaleString())}</td>
     </tr>
   `;
 }
@@ -1096,10 +1100,10 @@ function renderSongCountRow(song) {
 function renderSongDailyPeakRow(song) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(song.rank))}</td>
-      <td>${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
-      <td>${escapeHtml(song.times_played.toLocaleString())}</td>
-      <td class="date-cell">${escapeHtml(song.date)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(song.rank))}</td>
+      <td data-label="Song">${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
+      <td data-label="Play Count">${escapeHtml(song.times_played.toLocaleString())}</td>
+      <td class="date-cell" data-label="Date">${escapeHtml(song.date)}</td>
     </tr>
   `;
 }
@@ -1107,9 +1111,9 @@ function renderSongDailyPeakRow(song) {
 function renderArtistRow(artist) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(artist.rank))}</td>
-      <td>${escapeHtml(displayName(artist.artist))}</td>
-      <td>${escapeHtml(artist.playtime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(artist.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(artist.artist))}</td>
+      <td data-label="Playtime">${escapeHtml(artist.playtime)}</td>
     </tr>
   `;
 }
@@ -1117,9 +1121,9 @@ function renderArtistRow(artist) {
 function renderArtistCountRow(artist) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(artist.rank))}</td>
-      <td>${escapeHtml(displayName(artist.artist))}</td>
-      <td>${escapeHtml(artist.times_played.toLocaleString())}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(artist.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(artist.artist))}</td>
+      <td data-label="Play Count">${escapeHtml(artist.times_played.toLocaleString())}</td>
     </tr>
   `;
 }
@@ -1127,10 +1131,10 @@ function renderArtistCountRow(artist) {
 function renderArtistDailyPeakRow(artist) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(artist.rank))}</td>
-      <td>${escapeHtml(displayName(artist.artist))}</td>
-      <td>${escapeHtml(artist.times_played.toLocaleString())}</td>
-      <td class="date-cell">${escapeHtml(artist.date)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(artist.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(artist.artist))}</td>
+      <td data-label="Play Count">${escapeHtml(artist.times_played.toLocaleString())}</td>
+      <td class="date-cell" data-label="Date">${escapeHtml(artist.date)}</td>
     </tr>
   `;
 }
@@ -1138,9 +1142,9 @@ function renderArtistDailyPeakRow(artist) {
 function renderAlbumRow(album) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(album.rank))}</td>
-      <td>${renderLinkedLabel(album.uri, displayName(album.album), displayName(album.artist), `${displayName(album.album)} cover art`)}</td>
-      <td>${escapeHtml(album.playtime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(album.rank))}</td>
+      <td data-label="Album">${renderLinkedLabel(album.uri, displayName(album.album), displayName(album.artist), `${displayName(album.album)} cover art`)}</td>
+      <td data-label="Playtime">${escapeHtml(album.playtime)}</td>
     </tr>
   `;
 }
@@ -1148,10 +1152,10 @@ function renderAlbumRow(album) {
 function renderListeningStreakRow(streak) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(streak.rank))}</td>
-      <td>${escapeHtml(streak.playtime)}</td>
-      <td class="datetime-cell">${escapeHtml(streak.start_datetime)}</td>
-      <td class="datetime-cell">${escapeHtml(streak.end_datetime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(streak.rank))}</td>
+      <td data-label="Playtime">${escapeHtml(streak.playtime)}</td>
+      <td class="datetime-cell" data-label="Start">${escapeHtml(streak.start_datetime)}</td>
+      <td class="datetime-cell" data-label="End">${escapeHtml(streak.end_datetime)}</td>
     </tr>
   `;
 }
@@ -1159,12 +1163,12 @@ function renderListeningStreakRow(streak) {
 function renderArtistStreakRow(streak) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(streak.rank))}</td>
-      <td>${escapeHtml(displayName(streak.artist))}</td>
-      <td>${escapeHtml(streak.play_count.toLocaleString())}</td>
-      <td>${escapeHtml(streak.unique_songs.toLocaleString())}</td>
-      <td class="datetime-cell">${escapeHtml(streak.first_play)}</td>
-      <td class="datetime-cell">${escapeHtml(streak.last_play)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(streak.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(streak.artist))}</td>
+      <td data-label="Play Count">${escapeHtml(streak.play_count.toLocaleString())}</td>
+      <td data-label="Unique Songs">${escapeHtml(streak.unique_songs.toLocaleString())}</td>
+      <td class="datetime-cell" data-label="First Play">${escapeHtml(streak.first_play)}</td>
+      <td class="datetime-cell" data-label="Last Play">${escapeHtml(streak.last_play)}</td>
     </tr>
   `;
 }

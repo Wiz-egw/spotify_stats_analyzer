@@ -538,6 +538,12 @@ function prefersReducedMotion() {
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function prefersTapChartInteraction() {
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && (window.matchMedia("(hover: none)").matches || window.matchMedia("(pointer: coarse)").matches);
+}
+
 function clearArtworkState() {
   artworkEpoch += 1;
   artworkQueue = [];
@@ -1049,13 +1055,16 @@ function renderStatCard(label, value, subtext, infoText = "") {
 
 function renderChartsSection() {
   const revealKey = "charts-section";
+  const chartInteractionCopy = prefersTapChartInteraction()
+    ? "Tap any bar to see both playtime and play count."
+    : "Hover any bar to see both playtime and play count.";
 
   return `
     <section class="${buildRevealSectionClassName("chart-section", revealKey)}" id="charts-section" data-reveal-section="${escapeAttribute(revealKey)}">
       <div class="chart-section-header">
         <h2>Charts</h2>
         <p class="chart-section-copy">
-          Bars show total playtime for each time bucket. Tap or hover any bar to see both playtime and play count.
+          Bars show total playtime for each time bucket. ${escapeHtml(chartInteractionCopy)}
         </p>
       </div>
 

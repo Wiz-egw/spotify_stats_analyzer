@@ -1195,6 +1195,14 @@ td:nth-child(3) {
   transform: translateY(-2px);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .chart-bar-group:hover .chart-bar-rect {
+    fill: #63ec98;
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
 .chart-inspector {
   min-height: 88px;
   padding: 14px 16px;

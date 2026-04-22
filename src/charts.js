@@ -203,7 +203,7 @@ function renderChartInspector() {
 function renderChartInspectorPlaceholder() {
   return `
     <p class="chart-inspector-empty">
-      ${escapeHtml(prefersTapChartInteraction() ? "Tap a bar to inspect it." : "Hover or tap a bar to inspect it.")}
+      ${escapeHtml(prefersTapChartInteraction() ? "Tap a bar to inspect it." : "Hover a bar to inspect it.")}
     </p>
   `;
 }
@@ -228,6 +228,7 @@ function bindChartInteractions(container) {
   const inspector = container.querySelector("[data-chart-inspector]");
   const barGroups = Array.from(container.querySelectorAll("[data-chart-bar-group]"));
   const bars = Array.from(container.querySelectorAll("[data-chart-bar]"));
+  const useTapInteraction = prefersTapChartInteraction();
   if (!(inspector instanceof HTMLElement) || !bars.length) {
     return;
   }
@@ -263,18 +264,20 @@ function bindChartInteractions(container) {
       return;
     }
 
-    bar.addEventListener("click", (event) => {
-      event.preventDefault();
-      setActiveBar(bar);
-    });
+    if (useTapInteraction) {
+      bar.addEventListener("click", (event) => {
+        event.preventDefault();
+        setActiveBar(bar);
+      });
+    } else {
+      bar.addEventListener("pointerenter", (event) => {
+        if (event.pointerType === "touch") {
+          return;
+        }
 
-    bar.addEventListener("pointerenter", (event) => {
-      if (event.pointerType === "touch") {
-        return;
-      }
-
-      setActiveBar(bar);
-    });
+        setActiveBar(bar);
+      });
+    }
 
     bar.addEventListener("focus", () => {
       setActiveBar(bar);
@@ -292,6 +295,10 @@ function bindChartInteractions(container) {
       }
     });
   });
+
+  if (!useTapInteraction) {
+    container.addEventListener("pointerleave", clearActiveBar);
+  }
 }
 
 function prefersTapChartInteraction() {

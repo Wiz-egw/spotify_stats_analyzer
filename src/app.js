@@ -51,6 +51,7 @@ let activeArtworkRequests = 0;
 let artworkEpoch = 0;
 let artworkRenderTimer = 0;
 let revealSectionObserver = null;
+let infoTooltipAlignmentFrame = 0;
 
 const state = {
   analysis: null,
@@ -198,6 +199,10 @@ app.addEventListener("drop", (event) => {
   event.preventDefault();
   fileInput.files = event.dataTransfer.files;
   syncSelectedUploadDisplay(fileInput);
+});
+
+window.addEventListener("resize", () => {
+  scheduleInfoTooltipAlignment();
 });
 
 render();
@@ -427,6 +432,7 @@ function render() {
 
   document.title = state.analysis ? "Your Spotify Stats" : "Spotify Stats Analyzer";
   app.innerHTML = state.analysis ? renderResultsView() : renderLandingView();
+  scheduleInfoTooltipAlignment();
 
   if (state.analysis) {
     syncDateBounds("results-start-date", "results-end-date");
@@ -652,6 +658,78 @@ function scheduleArtworkRender() {
     artworkRenderTimer = 0;
     render();
   }, 80);
+}
+
+function scheduleInfoTooltipAlignment() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (infoTooltipAlignmentFrame) {
+    cancelAnimationFrame(infoTooltipAlignmentFrame);
+  }
+
+  infoTooltipAlignmentFrame = requestAnimationFrame(() => {
+    infoTooltipAlignmentFrame = 0;
+    refreshInfoTooltipAlignment();
+  });
+}
+
+function refreshInfoTooltipAlignment() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const isCompactViewport = window.innerWidth <= 1024;
+  const badges = document.querySelectorAll(".table-info-badge, .summary-info-badge");
+
+  badges.forEach((badge) => {
+    if (!(badge instanceof HTMLElement)) {
+      return;
+    }
+
+    const tooltip = badge.querySelector(".table-info-tooltip");
+    if (!(tooltip instanceof HTMLElement)) {
+      return;
+    }
+
+    resetInfoTooltipAlignment(tooltip);
+
+    if (!isCompactViewport) {
+      return;
+    }
+
+    const tooltipWidth = tooltip.offsetWidth;
+    if (!tooltipWidth) {
+      return;
+    }
+
+    const viewportGutter = window.innerWidth <= 720 ? 14 : 18;
+    const badgeRect = badge.getBoundingClientRect();
+    const desiredLeft = badgeRect.left + (badgeRect.width / 2) - (tooltipWidth / 2);
+    const maxLeft = Math.max(viewportGutter, window.innerWidth - viewportGutter - tooltipWidth);
+    const clampedLeft = clampNumber(desiredLeft, viewportGutter, maxLeft);
+    const tooltipLeftWithinBadge = clampedLeft - badgeRect.left;
+    const arrowLeft = clampNumber((badgeRect.width / 2) + badgeRect.left - clampedLeft, 18, tooltipWidth - 18);
+
+    tooltip.style.left = `${tooltipLeftWithinBadge}px`;
+    tooltip.style.right = "auto";
+    tooltip.style.setProperty("--tooltip-x-shift", "0px");
+    tooltip.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
+    tooltip.style.setProperty("--tooltip-arrow-shift", "0px");
+  });
+}
+
+function resetInfoTooltipAlignment(tooltip) {
+  tooltip.style.removeProperty("left");
+  tooltip.style.removeProperty("right");
+  tooltip.style.removeProperty("--tooltip-x-shift");
+  tooltip.style.removeProperty("--tooltip-arrow-left");
+  tooltip.style.removeProperty("--tooltip-arrow-shift");
+}
+
+function clampNumber(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function renderLandingView() {

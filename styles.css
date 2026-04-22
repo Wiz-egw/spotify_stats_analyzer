@@ -727,12 +727,14 @@ p {
 .summary-info-badge .table-info-tooltip {
   left: 50%;
   width: min(260px, calc(100vw - 32px));
-  transform: translateX(-50%) translateY(6px);
+  --tooltip-x-shift: -50%;
+  --tooltip-arrow-left: 50%;
+  --tooltip-arrow-shift: -50%;
 }
 
 .summary-info-badge .table-info-tooltip::before {
-  left: 50%;
-  transform: translateX(-50%);
+  left: var(--tooltip-arrow-left, 50%);
+  transform: translateX(var(--tooltip-arrow-shift, -50%));
 }
 
 .stat-value {
@@ -809,7 +811,7 @@ p {
   white-space: normal;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(6px);
+  transform: translateX(var(--tooltip-x-shift, 0px)) translateY(6px);
   transition:
     opacity 0.16s ease,
     transform 0.16s ease;
@@ -820,10 +822,11 @@ p {
   content: "";
   position: absolute;
   bottom: 100%;
-  left: 14px;
+  left: var(--tooltip-arrow-left, 14px);
   border-width: 0 7px 8px 7px;
   border-style: solid;
   border-color: transparent transparent var(--surface-deep) transparent;
+  transform: translateX(var(--tooltip-arrow-shift, 0px));
 }
 
 .table-info-badge:hover .table-info-tooltip,
@@ -831,12 +834,7 @@ p {
 .summary-info-badge:hover .table-info-tooltip,
 .summary-info-badge:focus .table-info-tooltip {
   opacity: 1;
-  transform: translateX(0) translateY(0);
-}
-
-.summary-info-badge:hover .table-info-tooltip,
-.summary-info-badge:focus .table-info-tooltip {
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(var(--tooltip-x-shift, 0px)) translateY(0);
 }
 
 .table-shell {
@@ -1353,6 +1351,10 @@ td:nth-child(3) {
 }
 
 @media (max-width: 1024px) {
+  .table-section {
+    margin-bottom: 36px;
+  }
+
   .table-shell {
     overflow: hidden;
     border: 1px solid var(--line);
@@ -1372,24 +1374,14 @@ td:nth-child(3) {
 
   .table-info-tooltip,
   .summary-info-badge .table-info-tooltip {
-    left: auto;
-    right: 0;
-    width: min(300px, calc(100vw - 28px));
-    transform: translateY(6px);
-  }
-
-  .table-info-tooltip::before,
-  .summary-info-badge .table-info-tooltip::before {
-    left: auto;
-    right: 10px;
-    transform: none;
+    width: min(300px, calc(100vw - 36px));
   }
 
   .table-info-badge:hover .table-info-tooltip,
   .table-info-badge:focus .table-info-tooltip,
   .summary-info-badge:hover .table-info-tooltip,
   .summary-info-badge:focus .table-info-tooltip {
-    transform: translateY(0);
+    transform: translateX(var(--tooltip-x-shift, 0px)) translateY(0);
   }
 
   .table-shell th,
@@ -1577,6 +1569,10 @@ td:nth-child(3) {
 }
 
 @media (max-width: 720px) {
+  .table-section {
+    margin-bottom: 42px;
+  }
+
   .page-shell {
     width: min(100% - 20px, 1120px);
     padding: 20px 0 40px;
@@ -1625,6 +1621,11 @@ td:nth-child(3) {
 
   .table-shell {
     overflow: hidden;
+  }
+
+  .table-info-tooltip,
+  .summary-info-badge .table-info-tooltip {
+    width: min(272px, calc(100vw - 32px));
   }
 
   .table-shell th,

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06110d">
+  <meta
+    name="description"
+    content="Run browser-based verification checks for the Spotify Stats Analyzer JavaScript implementation."
+  >
+  <title>Spotify Stats Verifier</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero-card verify-card">
+      <p class="eyebrow">Verification</p>
+      <h1>JavaScript Parity Checks</h1>
+      <p>
+        Run the built-in fixture checks in the browser to confirm the analyzer logic still matches the expected behavior.
+      </p>
+
+      <div class="instructions-actions">
+        <a href="./index.html" class="secondary-link">Back to analyzer</a>
+        <a href="./instructions.html" class="secondary-link">View instructions</a>
+      </div>
+
+      <div class="verify-layout">
+        <div id="verify-output" class="verify-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <button class="bug-report-link" type="button" aria-label="Report a bug">
+      Report bug
+    </button>
+  </footer>
+
+  <script type="module" src="./src/verify.js"></script>
+</body>
+</html>

@@ -1281,15 +1281,15 @@ td:nth-child(3) {
 
   .table-shell th,
   .table-shell td {
-    padding: 10px 12px;
-    font-size: 0.82rem;
-    line-height: 1.3;
+    padding: 9px 10px;
+    font-size: 0.78rem;
+    line-height: 1.25;
     vertical-align: top;
   }
 
   .table-shell th {
-    font-size: 0.72rem;
-    letter-spacing: 0.03em;
+    font-size: 0.68rem;
+    letter-spacing: 0.025em;
   }
 
   .table-shell td {
@@ -1299,7 +1299,7 @@ td:nth-child(3) {
 
   .table-shell .table--compact th,
   .table-shell .table--compact td {
-    padding: 10px 11px;
+    padding: 9px 10px;
   }
 
   .table-shell .table--compact th:nth-child(1),
@@ -1320,7 +1320,7 @@ td:nth-child(3) {
 
   .table-shell .table--scroll th,
   .table-shell .table--scroll td {
-    padding: 9px 10px;
+    padding: 8px 9px;
   }
 
   .table-shell .song-link,
@@ -1329,9 +1329,9 @@ td:nth-child(3) {
   }
 
   .table-shell .cover-art {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
   }
 
   .table-shell .stacked-label {
@@ -1344,14 +1344,15 @@ td:nth-child(3) {
   }
 
   .table-shell .stacked-label-secondary {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
   }
 
   .table-shell .date-cell,
   .table-shell .datetime-cell {
     white-space: normal;
     font-variant-numeric: tabular-nums;
-    line-height: 1.25;
+    line-height: 1.2;
+    font-size: 0.74rem;
   }
 
   .streak-table,
@@ -1418,19 +1419,19 @@ td:nth-child(3) {
 
   .table-shell th,
   .table-shell td {
-    padding: 8px 9px;
-    font-size: 0.78rem;
-    line-height: 1.25;
+    padding: 7px 8px;
+    font-size: 0.74rem;
+    line-height: 1.2;
   }
 
   .table-shell th {
-    font-size: 0.65rem;
+    font-size: 0.61rem;
     letter-spacing: 0.02em;
   }
 
   .table-shell .table--compact th,
   .table-shell .table--compact td {
-    padding: 8px 9px;
+    padding: 7px 8px;
   }
 
   .table-shell .table--compact th:nth-child(1),
@@ -1451,31 +1452,31 @@ td:nth-child(3) {
 
   .table-shell .table--scroll th,
   .table-shell .table--scroll td {
-    padding: 7px 8px;
+    padding: 6px 7px;
   }
 
   .table-shell .song-link,
   .table-shell .media-label {
-    gap: 8px;
+    gap: 6px;
   }
 
   .table-shell .cover-art {
-    width: 38px;
-    height: 38px;
-    flex-basis: 38px;
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
   }
 
   .table-shell .stacked-label-primary {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .table-shell .stacked-label-secondary {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
   }
 
   .table-shell .date-cell,
   .table-shell .datetime-cell {
-    font-size: 0.7rem;
-    line-height: 1.2;
+    font-size: 0.66rem;
+    line-height: 1.15;
   }
 }

@@ -960,6 +960,13 @@ td:nth-child(3) {
   font-variant-numeric: tabular-nums;
 }
 
+.datetime-value,
+.datetime-date,
+.datetime-separator,
+.datetime-time {
+  display: inline;
+}
+
 .artist-streak-table {
   min-width: 1040px;
   width: 100%;
@@ -1155,6 +1162,8 @@ td:nth-child(3) {
 }
 
 .chart-shell {
+  display: grid;
+  gap: 14px;
   overflow: hidden;
 }
 
@@ -1162,6 +1171,85 @@ td:nth-child(3) {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.chart-bar-hitbox {
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.chart-bar-rect {
+  transition:
+    fill 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease;
+  transform-origin: center bottom;
+}
+
+.chart-bar-group.is-active .chart-bar-rect,
+.chart-bar-group:focus-within .chart-bar-rect {
+  fill: #63ec98;
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.chart-inspector {
+  min-height: 88px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(29, 185, 84, 0.09), rgba(255, 255, 255, 0.02)),
+    var(--surface-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.chart-inspector-empty,
+.chart-inspector-label,
+.chart-inspector-metric {
+  margin: 0;
+}
+
+.chart-inspector-empty {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.chart-inspector-label {
+  margin-bottom: 10px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.chart-inspector-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.chart-inspector-metric {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chart-inspector-metric span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chart-inspector-metric strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-main);
+  font-size: 0.96rem;
 }
 
 .chart-empty,
@@ -1266,7 +1354,10 @@ td:nth-child(3) {
 
 @media (max-width: 1024px) {
   .table-shell {
-    overflow: visible;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--surface-strong);
   }
 
   .table-scroll-hint {
@@ -1277,6 +1368,28 @@ td:nth-child(3) {
     width: 100%;
     min-width: 0 !important;
     table-layout: fixed;
+  }
+
+  .table-info-tooltip,
+  .summary-info-badge .table-info-tooltip {
+    left: auto;
+    right: 0;
+    width: min(300px, calc(100vw - 28px));
+    transform: translateY(6px);
+  }
+
+  .table-info-tooltip::before,
+  .summary-info-badge .table-info-tooltip::before {
+    left: auto;
+    right: 10px;
+    transform: none;
+  }
+
+  .table-info-badge:hover .table-info-tooltip,
+  .table-info-badge:focus .table-info-tooltip,
+  .summary-info-badge:hover .table-info-tooltip,
+  .summary-info-badge:focus .table-info-tooltip {
+    transform: translateY(0);
   }
 
   .table-shell th,
@@ -1292,9 +1405,28 @@ td:nth-child(3) {
     letter-spacing: 0.025em;
   }
 
+  .table-shell .table-heading-rank {
+    font-size: 0;
+    letter-spacing: 0;
+  }
+
   .table-shell td {
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+
+  .table-shell th:first-child,
+  .table-shell td:first-child,
+  .table-shell .rank {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .table-shell th:first-child,
+  .table-shell td:first-child {
+    padding-left: 8px;
+    padding-right: 8px;
   }
 
   .table-shell .table--compact th,
@@ -1304,23 +1436,87 @@ td:nth-child(3) {
 
   .table-shell .table--compact th:nth-child(1),
   .table-shell .table--compact td:nth-child(1) {
-    width: 8%;
+    width: 11%;
   }
 
   .table-shell .table--compact th:nth-child(2),
   .table-shell .table--compact td:nth-child(2) {
-    width: 67%;
+    width: 61%;
   }
 
   .table-shell .table--compact th:nth-child(3),
   .table-shell .table--compact td:nth-child(3) {
-    width: 25%;
+    width: 28%;
     text-align: right;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(1),
+  .table-shell .daily-peak-table td:nth-child(1) {
+    width: 11%;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(2),
+  .table-shell .daily-peak-table td:nth-child(2) {
+    width: 37%;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(3),
+  .table-shell .daily-peak-table td:nth-child(3) {
+    width: 18%;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(4),
+  .table-shell .daily-peak-table td:nth-child(4) {
+    width: 34%;
   }
 
   .table-shell .table--scroll th,
   .table-shell .table--scroll td {
     padding: 8px 9px;
+  }
+
+  .table-shell .streak-table th:nth-child(1),
+  .table-shell .streak-table td:nth-child(1) {
+    width: 12%;
+  }
+
+  .table-shell .streak-table th:nth-child(2),
+  .table-shell .streak-table td:nth-child(2) {
+    width: 18%;
+  }
+
+  .table-shell .streak-table th:nth-child(3),
+  .table-shell .streak-table td:nth-child(3),
+  .table-shell .streak-table th:nth-child(4),
+  .table-shell .streak-table td:nth-child(4) {
+    width: 35%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(1),
+  .table-shell .artist-streak-table td:nth-child(1) {
+    width: 10%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(2),
+  .table-shell .artist-streak-table td:nth-child(2) {
+    width: 24%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(3),
+  .table-shell .artist-streak-table td:nth-child(3) {
+    width: 13%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(4),
+  .table-shell .artist-streak-table td:nth-child(4) {
+    width: 13%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(5),
+  .table-shell .artist-streak-table td:nth-child(5),
+  .table-shell .artist-streak-table th:nth-child(6),
+  .table-shell .artist-streak-table td:nth-child(6) {
+    width: 20%;
   }
 
   .table-shell .song-link,
@@ -1353,6 +1549,20 @@ td:nth-child(3) {
     font-variant-numeric: tabular-nums;
     line-height: 1.2;
     font-size: 0.74rem;
+  }
+
+  .table-shell .datetime-value {
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .table-shell .datetime-date,
+  .table-shell .datetime-time {
+    display: block;
+  }
+
+  .table-shell .datetime-separator {
+    display: none;
   }
 
   .streak-table,
@@ -1414,7 +1624,7 @@ td:nth-child(3) {
   }
 
   .table-shell {
-    overflow: visible;
+    overflow: hidden;
   }
 
   .table-shell th,
@@ -1429,6 +1639,12 @@ td:nth-child(3) {
     letter-spacing: 0.02em;
   }
 
+  .table-shell th:first-child,
+  .table-shell td:first-child {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
   .table-shell .table--compact th,
   .table-shell .table--compact td {
     padding: 7px 8px;
@@ -1436,23 +1652,87 @@ td:nth-child(3) {
 
   .table-shell .table--compact th:nth-child(1),
   .table-shell .table--compact td:nth-child(1) {
-    width: 7%;
+    width: 12%;
   }
 
   .table-shell .table--compact th:nth-child(2),
   .table-shell .table--compact td:nth-child(2) {
-    width: 68%;
+    width: 60%;
   }
 
   .table-shell .table--compact th:nth-child(3),
   .table-shell .table--compact td:nth-child(3) {
-    width: 25%;
+    width: 28%;
     text-align: right;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(1),
+  .table-shell .daily-peak-table td:nth-child(1) {
+    width: 12%;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(2),
+  .table-shell .daily-peak-table td:nth-child(2) {
+    width: 36%;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(3),
+  .table-shell .daily-peak-table td:nth-child(3) {
+    width: 18%;
+  }
+
+  .table-shell .daily-peak-table th:nth-child(4),
+  .table-shell .daily-peak-table td:nth-child(4) {
+    width: 34%;
   }
 
   .table-shell .table--scroll th,
   .table-shell .table--scroll td {
     padding: 6px 7px;
+  }
+
+  .table-shell .streak-table th:nth-child(1),
+  .table-shell .streak-table td:nth-child(1) {
+    width: 13%;
+  }
+
+  .table-shell .streak-table th:nth-child(2),
+  .table-shell .streak-table td:nth-child(2) {
+    width: 18%;
+  }
+
+  .table-shell .streak-table th:nth-child(3),
+  .table-shell .streak-table td:nth-child(3),
+  .table-shell .streak-table th:nth-child(4),
+  .table-shell .streak-table td:nth-child(4) {
+    width: 34.5%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(1),
+  .table-shell .artist-streak-table td:nth-child(1) {
+    width: 11%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(2),
+  .table-shell .artist-streak-table td:nth-child(2) {
+    width: 23%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(3),
+  .table-shell .artist-streak-table td:nth-child(3) {
+    width: 13%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(4),
+  .table-shell .artist-streak-table td:nth-child(4) {
+    width: 13%;
+  }
+
+  .table-shell .artist-streak-table th:nth-child(5),
+  .table-shell .artist-streak-table td:nth-child(5),
+  .table-shell .artist-streak-table th:nth-child(6),
+  .table-shell .artist-streak-table td:nth-child(6) {
+    width: 20%;
   }
 
   .table-shell .song-link,
@@ -1478,5 +1758,14 @@ td:nth-child(3) {
   .table-shell .datetime-cell {
     font-size: 0.66rem;
     line-height: 1.15;
+  }
+
+  .chart-inspector {
+    min-height: 0;
+    padding: 12px 13px;
+  }
+
+  .chart-inspector-metrics {
+    grid-template-columns: 1fr;
   }
 }

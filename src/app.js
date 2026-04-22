@@ -977,7 +977,7 @@ function renderChartsSection() {
       <div class="chart-section-header">
         <h2>Charts</h2>
         <p class="chart-section-copy">
-          Bars show total playtime for each time bucket. Hover any bar to see both playtime and play count.
+          Bars show total playtime for each time bucket. Tap or hover any bar to see both playtime and play count.
         </p>
       </div>
 
@@ -1037,7 +1037,7 @@ function renderTableSection(title, headers, items, rowRenderer, tableClass = "",
         ${isCompactTable ? "" : '<p class="table-scroll-hint">Swipe horizontally to see more columns.</p>'}
         <table class="${escapeAttribute([tableModeClass, tableClass].filter(Boolean).join(" "))}">
           <thead>
-            <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr>
+            <tr>${headers.map((header, index) => renderTableHeaderCell(header, index)).join("")}</tr>
           </thead>
           <tbody>
             ${items.map(rowRenderer).join("")}
@@ -1154,8 +1154,8 @@ function renderListeningStreakRow(streak) {
     <tr>
       <td class="rank" data-label="Rank">${escapeHtml(String(streak.rank))}</td>
       <td data-label="Playtime">${escapeHtml(streak.playtime)}</td>
-      <td class="datetime-cell" data-label="Start">${escapeHtml(streak.start_datetime)}</td>
-      <td class="datetime-cell" data-label="End">${escapeHtml(streak.end_datetime)}</td>
+      <td class="datetime-cell" data-label="Start">${renderDateTimeValue(streak.start_datetime)}</td>
+      <td class="datetime-cell" data-label="End">${renderDateTimeValue(streak.end_datetime)}</td>
     </tr>
   `;
 }
@@ -1167,8 +1167,8 @@ function renderArtistStreakRow(streak) {
       <td data-label="Artist">${escapeHtml(displayName(streak.artist))}</td>
       <td data-label="Play Count">${escapeHtml(streak.play_count.toLocaleString())}</td>
       <td data-label="Unique Songs">${escapeHtml(streak.unique_songs.toLocaleString())}</td>
-      <td class="datetime-cell" data-label="First Play">${escapeHtml(streak.first_play)}</td>
-      <td class="datetime-cell" data-label="Last Play">${escapeHtml(streak.last_play)}</td>
+      <td class="datetime-cell" data-label="First Play">${renderDateTimeValue(streak.first_play)}</td>
+      <td class="datetime-cell" data-label="Last Play">${renderDateTimeValue(streak.last_play)}</td>
     </tr>
   `;
 }
@@ -1322,7 +1322,7 @@ function safeSpotifyHref(uri) {
       return "";
     }
 
-    return `https://open.spotify.com/${type}/${encodeURIComponent(id)}`;
+  return `https://open.spotify.com/${type}/${encodeURIComponent(id)}`;
   }
 
   if (trimmedUri.startsWith("https://open.spotify.com/")) {
@@ -1339,6 +1339,45 @@ function safeSpotifyHref(uri) {
   }
 
   return "";
+}
+
+function renderTableHeaderCell(header, index) {
+  const classNames = [];
+  if (index === 0 && String(header || "").trim().toLowerCase() === "rank") {
+    classNames.push("table-heading-rank");
+  }
+
+  return `<th${classNames.length ? ` class="${escapeAttribute(classNames.join(" "))}"` : ""}>${escapeHtml(header)}</th>`;
+}
+
+function renderDateTimeValue(value) {
+  const [datePart, timePart] = splitDateTimeValue(value);
+  if (!timePart) {
+    return escapeHtml(datePart);
+  }
+
+  return `
+    <span class="datetime-value">
+      <span class="datetime-date">${escapeHtml(datePart)}</span><span class="datetime-separator">, </span><span class="datetime-time">${escapeHtml(timePart)}</span>
+    </span>
+  `;
+}
+
+function splitDateTimeValue(value) {
+  const trimmedValue = String(value || "").trim();
+  if (!trimmedValue) {
+    return ["", ""];
+  }
+
+  const separatorIndex = trimmedValue.lastIndexOf(", ");
+  if (separatorIndex < 0) {
+    return [trimmedValue, ""];
+  }
+
+  return [
+    trimmedValue.slice(0, separatorIndex),
+    trimmedValue.slice(separatorIndex + 2),
+  ];
 }
 
 function nextRequestId() {

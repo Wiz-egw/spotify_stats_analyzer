@@ -13,7 +13,7 @@ self.addEventListener("message", async (event) => {
     if (type === "parse-upload") {
       postStatus(requestId, "Reading Spotify ZIP");
       streamingData = await extractStreamingDataFromZip(payload.buffer);
-      postStatus(requestId, "Computing stats");
+      postStatus(requestId, "Computing stats...");
       postAnalysis(requestId, payload);
       return;
     }

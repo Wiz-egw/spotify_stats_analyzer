@@ -86,17 +86,22 @@ function renderListeningActivityChart(container, entries, chartKey) {
     const x = groupCenter - barWidth / 2;
     const y = padding.top + plotHeight - barHeight;
     const labelY = padding.top + plotHeight + (shouldTiltLabels ? 24 : 18);
+    const hitboxX = padding.left + groupWidth * index;
+    const playtimeLabel = formatPlaytime(entry.playtime_ms);
+    const playCountLabel = entry.play_count.toLocaleString();
     const tooltip = [
-      `${entry.label}: ${formatPlaytime(entry.playtime_ms)} playtime`,
-      `${entry.play_count.toLocaleString()} plays`,
+      `${entry.label}: ${playtimeLabel} playtime`,
+      `${playCountLabel} plays`,
     ].join(" | ");
+    const accessibilityLabel = `${entry.label}: ${playtimeLabel} playtime and ${playCountLabel} plays.`;
     const labelAttributes = shouldTiltLabels
       ? `text-anchor="end" transform="rotate(-32 ${groupCenter} ${labelY})"`
       : 'text-anchor="middle"';
 
     markup.push(
-      "<g>",
-      `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 0)}" rx="5" fill="${escapeHtml(barColor)}">`,
+      '<g class="chart-bar-group" data-chart-bar-group="true">',
+      `<rect class="chart-bar-hitbox" x="${hitboxX}" y="${padding.top}" width="${groupWidth}" height="${plotHeight}" fill="transparent" tabindex="0" role="button" data-chart-bar="true" data-chart-label="${escapeHtml(entry.label)}" data-chart-playtime="${escapeHtml(playtimeLabel)}" data-chart-playcount="${escapeHtml(playCountLabel)}" aria-label="${escapeHtml(accessibilityLabel)}"></rect>`,
+      `<rect class="chart-bar-rect" x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 0)}" rx="5" fill="${escapeHtml(barColor)}">`,
       `<title>${escapeHtml(tooltip)}</title>`,
       "</rect>",
       renderXAxisLabel({
@@ -115,8 +120,9 @@ function renderListeningActivityChart(container, entries, chartKey) {
     );
   });
 
-  markup.push("</svg>");
+  markup.push("</svg>", renderChartInspector());
   container.innerHTML = markup.join("");
+  bindChartInteractions(container);
 }
 
 function renderXAxisLabel({
@@ -184,6 +190,114 @@ function getSlotWidth(chartKey, entryCount, longestVisibleXAxisLabel, shouldTilt
 
 function getMinimumChartWidth() {
   return COMPACT_CHART_MIN_WIDTH;
+}
+
+function renderChartInspector() {
+  return `
+    <div class="chart-inspector" data-chart-inspector="true" aria-live="polite">
+      ${renderChartInspectorPlaceholder()}
+    </div>
+  `;
+}
+
+function renderChartInspectorPlaceholder() {
+  return `
+    <p class="chart-inspector-empty">
+      ${escapeHtml(prefersTapChartInteraction() ? "Tap a bar to inspect it." : "Hover or tap a bar to inspect it.")}
+    </p>
+  `;
+}
+
+function renderChartInspectorContent(label, playtime, playCount) {
+  return `
+    <p class="chart-inspector-label">${escapeHtml(label)}</p>
+    <div class="chart-inspector-metrics">
+      <p class="chart-inspector-metric">
+        <span>Playtime</span>
+        <strong>${escapeHtml(playtime)}</strong>
+      </p>
+      <p class="chart-inspector-metric">
+        <span>Plays</span>
+        <strong>${escapeHtml(playCount)}</strong>
+      </p>
+    </div>
+  `;
+}
+
+function bindChartInteractions(container) {
+  const inspector = container.querySelector("[data-chart-inspector]");
+  const barGroups = Array.from(container.querySelectorAll("[data-chart-bar-group]"));
+  const bars = Array.from(container.querySelectorAll("[data-chart-bar]"));
+  if (!(inspector instanceof HTMLElement) || !bars.length) {
+    return;
+  }
+
+  const setActiveBar = (bar) => {
+    if (!(bar instanceof Element)) {
+      return;
+    }
+
+    const label = bar.getAttribute("data-chart-label") || "";
+    const playtime = bar.getAttribute("data-chart-playtime") || "0s";
+    const playCount = bar.getAttribute("data-chart-playcount") || "0";
+
+    barGroups.forEach((group) => {
+      group.classList.toggle("is-active", group.contains(bar));
+    });
+
+    inspector.classList.add("has-selection");
+    inspector.innerHTML = renderChartInspectorContent(label, playtime, playCount);
+  };
+
+  const clearActiveBar = () => {
+    barGroups.forEach((group) => {
+      group.classList.remove("is-active");
+    });
+
+    inspector.classList.remove("has-selection");
+    inspector.innerHTML = renderChartInspectorPlaceholder();
+  };
+
+  bars.forEach((bar) => {
+    if (!(bar instanceof SVGElement)) {
+      return;
+    }
+
+    bar.addEventListener("click", (event) => {
+      event.preventDefault();
+      setActiveBar(bar);
+    });
+
+    bar.addEventListener("pointerenter", (event) => {
+      if (event.pointerType === "touch") {
+        return;
+      }
+
+      setActiveBar(bar);
+    });
+
+    bar.addEventListener("focus", () => {
+      setActiveBar(bar);
+    });
+
+    bar.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        setActiveBar(bar);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        clearActiveBar();
+      }
+    });
+  });
+}
+
+function prefersTapChartInteraction() {
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && (window.matchMedia("(hover: none)").matches || window.matchMedia("(pointer: coarse)").matches);
 }
 
 function escapeHtml(value) {

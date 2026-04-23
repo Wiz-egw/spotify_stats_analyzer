@@ -1134,7 +1134,7 @@ function renderResultsView() {
       ${renderDailyInsightsCard(analysis.dailyListeningInsights)}
 
       ${renderTableSection(
-        "Most Plays Of A Single Song In One Day",
+        "Highest Plays Of A Song In One Day",
         ["Rank", "Song", "Play Count", "Date"],
         analysis.songDailyPeaks,
         renderSongDailyPeakRow,
@@ -1144,7 +1144,7 @@ function renderResultsView() {
       )}
 
       ${renderTableSection(
-        "Most Plays Of A Single Artist In One Day",
+        "Highest Plays Of An Artist In One Day",
         ["Rank", "Artist", "Play Count", "Date"],
         analysis.artistDailyPeaks,
         renderArtistDailyPeakRow,

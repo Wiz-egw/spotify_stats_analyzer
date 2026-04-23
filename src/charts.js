@@ -22,6 +22,7 @@ function renderListeningActivityChart(container, entries, chartKey) {
     return;
   }
 
+  const useTapInteraction = prefersTapChartInteraction();
   const gridColor = getThemeColor("--chart-grid", "rgba(173, 231, 198, 0.12)");
   const axisColor = getThemeColor("--chart-axis", "#8ba197");
   const labelColor = getThemeColor("--chart-label", "#d9e9e0");
@@ -98,10 +99,33 @@ function renderListeningActivityChart(container, entries, chartKey) {
       ? `text-anchor="end" transform="rotate(-32 ${groupCenter} ${labelY})"`
       : 'text-anchor="middle"';
 
+    if (useTapInteraction) {
+      markup.push(
+        '<g class="chart-bar-group" data-chart-bar-group="true">',
+        `<rect class="chart-bar-hitbox" x="${hitboxX}" y="${padding.top}" width="${groupWidth}" height="${plotHeight}" fill="transparent" tabindex="0" role="button" data-chart-bar="true" data-chart-label="${escapeHtml(entry.label)}" data-chart-playtime="${escapeHtml(playtimeLabel)}" data-chart-playcount="${escapeHtml(playCountLabel)}" aria-label="${escapeHtml(accessibilityLabel)}"></rect>`,
+        `<rect class="chart-bar-rect" x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 0)}" rx="5" fill="${escapeHtml(barColor)}">`,
+        `<title>${escapeHtml(tooltip)}</title>`,
+        "</rect>",
+        renderXAxisLabel({
+          chartKey,
+          entry,
+          index,
+          groupCenter,
+          labelY,
+          labelAttributes,
+          xAxisFontSize,
+          labelColor,
+          labelOutlineColor,
+          visibleLabelStep,
+        }),
+        "</g>",
+      );
+      return;
+    }
+
     markup.push(
-      '<g class="chart-bar-group" data-chart-bar-group="true">',
-      `<rect class="chart-bar-hitbox" x="${hitboxX}" y="${padding.top}" width="${groupWidth}" height="${plotHeight}" fill="transparent" tabindex="0" role="button" data-chart-bar="true" data-chart-label="${escapeHtml(entry.label)}" data-chart-playtime="${escapeHtml(playtimeLabel)}" data-chart-playcount="${escapeHtml(playCountLabel)}" aria-label="${escapeHtml(accessibilityLabel)}"></rect>`,
-      `<rect class="chart-bar-rect" x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 0)}" rx="5" fill="${escapeHtml(barColor)}">`,
+      "<g>",
+      `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 0)}" rx="5" fill="${escapeHtml(barColor)}">`,
       `<title>${escapeHtml(tooltip)}</title>`,
       "</rect>",
       renderXAxisLabel({
@@ -120,9 +144,14 @@ function renderListeningActivityChart(container, entries, chartKey) {
     );
   });
 
-  markup.push("</svg>", renderChartInspector());
+  markup.push("</svg>");
+  if (useTapInteraction) {
+    markup.push(renderChartInspector());
+  }
   container.innerHTML = markup.join("");
-  bindChartInteractions(container);
+  if (useTapInteraction) {
+    bindChartInteractions(container);
+  }
 }
 
 function renderXAxisLabel({

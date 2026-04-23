@@ -1701,8 +1701,8 @@ td:nth-child(3) {
   }
 
   .page-shell {
-    width: min(100% - 20px, 1120px);
-    padding: 20px 0 40px;
+    width: 100%;
+    padding: 20px 8px 40px;
   }
 
   .hero-card,

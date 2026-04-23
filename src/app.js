@@ -745,11 +745,11 @@ function renderLandingView() {
         <p class="eyebrow">Spotify Streaming History Analysis</p>
         <h1>Upload your Spotify Streaming History ZIP</h1>
         <p class="hero-copy">
-          Explore your Spotify music listening history in a fast, privacy-first browser dashboard.
+          Explore your Spotify music listening history in a fast, privacy-first browser dashboard. No login required.
           Your Spotify data stays in your browser and is not uploaded to a server.
-          This site is independent and is not affiliated with, endorsed by, or sponsored by Spotify.
           Podcast and audiobook plays are excluded from these stats.
           Leave the dates blank to analyze your full listening history, or use the calendar inputs to focus on a specific period.
+          This site is independent and is not affiliated with, endorsed by, or sponsored by Spotify.
         </p>
 
         <div class="landing-link-row">

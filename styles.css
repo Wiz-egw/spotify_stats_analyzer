@@ -633,8 +633,9 @@ p {
 
 .reveal-section.is-visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
-  filter: blur(0);
+  transform: none;
+  filter: none;
+  will-change: auto;
 }
 
 .summary-stats h2,

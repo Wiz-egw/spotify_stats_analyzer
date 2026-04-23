@@ -41,6 +41,7 @@ const SUMMARY_INFO_TEXT = {
 const INITIAL_REVEAL_SECTION_IDS = new Set([
   "summary-stats-section",
 ]);
+const INFO_BADGE_SELECTOR = ".table-info-badge, .summary-info-badge";
 let worker = null;
 let artworkQueue = [];
 const artworkByHref = new Map();
@@ -51,6 +52,9 @@ let activeArtworkRequests = 0;
 let artworkEpoch = 0;
 let artworkRenderTimer = 0;
 let revealSectionObserver = null;
+let infoTooltipAlignmentFrame = 0;
+let activeInfoTooltipBadge = null;
+let floatingInfoTooltip = null;
 
 const state = {
   analysis: null,
@@ -94,6 +98,17 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  const infoBadge = target.closest(INFO_BADGE_SELECTOR);
+  if (prefersTapInfoTooltipInteraction()) {
+    if (infoBadge instanceof HTMLElement) {
+      event.preventDefault();
+      toggleInfoTooltipBadge(infoBadge);
+      return;
+    }
+
+    closeActiveInfoTooltipBadge();
+  }
+
   const toggleButton = target.closest("[data-toggle-panel]");
   if (toggleButton instanceof HTMLButtonElement) {
     const panelName = toggleButton.dataset.togglePanel;
@@ -126,6 +141,7 @@ app.addEventListener("click", (event) => {
   const limitButton = target.closest("[data-top-limit]");
   if (limitButton instanceof HTMLButtonElement) {
     event.preventDefault();
+    state.panels.topLimit = false;
     runAnalysis({
       startDate: state.analysis?.selectedStartDate || "",
       endDate: state.analysis?.selectedEndDate || "",
@@ -142,6 +158,32 @@ app.addEventListener("click", (event) => {
     }
 
     worker.postMessage({ type: "clear-data", requestId: nextRequestId() });
+  }
+});
+
+app.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeActiveInfoTooltipBadge();
+    return;
+  }
+
+  if (!prefersTapInfoTooltipInteraction()) {
+    return;
+  }
+
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const infoBadge = target.closest(INFO_BADGE_SELECTOR);
+  if (!(infoBadge instanceof HTMLElement)) {
+    return;
+  }
+
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    toggleInfoTooltipBadge(infoBadge);
   }
 });
 
@@ -199,6 +241,17 @@ app.addEventListener("drop", (event) => {
   fileInput.files = event.dataTransfer.files;
   syncSelectedUploadDisplay(fileInput);
 });
+
+window.addEventListener("resize", () => {
+  if (!prefersTapInfoTooltipInteraction()) {
+    closeActiveInfoTooltipBadge();
+  }
+  scheduleInfoTooltipAlignment();
+});
+
+window.addEventListener("scroll", () => {
+  scheduleInfoTooltipAlignment();
+}, { passive: true });
 
 render();
 
@@ -424,9 +477,12 @@ function ensureWorker() {
 
 function render() {
   teardownSectionObservers();
+  activeInfoTooltipBadge = null;
+  hideFloatingInfoTooltip();
 
   document.title = state.analysis ? "Your Spotify Stats" : "Spotify Stats Analyzer";
   app.innerHTML = state.analysis ? renderResultsView() : renderLandingView();
+  scheduleInfoTooltipAlignment();
 
   if (state.analysis) {
     syncDateBounds("results-start-date", "results-end-date");
@@ -530,6 +586,12 @@ function prefersReducedMotion() {
   return typeof window !== "undefined"
     && typeof window.matchMedia === "function"
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function prefersTapChartInteraction() {
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && (window.matchMedia("(hover: none)").matches || window.matchMedia("(pointer: coarse)").matches);
 }
 
 function clearArtworkState() {
@@ -654,6 +716,173 @@ function scheduleArtworkRender() {
   }, 80);
 }
 
+function scheduleInfoTooltipAlignment() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (infoTooltipAlignmentFrame) {
+    cancelAnimationFrame(infoTooltipAlignmentFrame);
+  }
+
+  infoTooltipAlignmentFrame = requestAnimationFrame(() => {
+    infoTooltipAlignmentFrame = 0;
+    refreshInfoTooltipAlignment();
+  });
+}
+
+function prefersTapInfoTooltipInteraction() {
+  return typeof window !== "undefined" && window.innerWidth <= 1024;
+}
+
+function closeActiveInfoTooltipBadge() {
+  hideFloatingInfoTooltip();
+
+  if (!(activeInfoTooltipBadge instanceof HTMLElement)) {
+    activeInfoTooltipBadge = null;
+    return;
+  }
+
+  activeInfoTooltipBadge.blur();
+  activeInfoTooltipBadge.classList.remove("is-open");
+  activeInfoTooltipBadge.setAttribute("aria-expanded", "false");
+  activeInfoTooltipBadge = null;
+}
+
+function toggleInfoTooltipBadge(badge) {
+  if (!(badge instanceof HTMLElement)) {
+    return;
+  }
+
+  const isAlreadyOpen = activeInfoTooltipBadge === badge && badge.classList.contains("is-open");
+  if (isAlreadyOpen) {
+    closeActiveInfoTooltipBadge();
+    badge.blur();
+    return;
+  }
+
+  closeActiveInfoTooltipBadge();
+  badge.classList.add("is-open");
+  badge.setAttribute("aria-expanded", "true");
+  activeInfoTooltipBadge = badge;
+  scheduleInfoTooltipAlignment();
+}
+
+function refreshInfoTooltipAlignment() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const isCompactViewport = window.innerWidth <= 1024;
+  const badges = document.querySelectorAll(INFO_BADGE_SELECTOR);
+
+  badges.forEach((badge) => {
+    if (!(badge instanceof HTMLElement)) {
+      return;
+    }
+
+    const tooltip = badge.querySelector(".table-info-tooltip");
+    if (!(tooltip instanceof HTMLElement)) {
+      return;
+    }
+
+    resetInfoTooltipAlignment(tooltip);
+  });
+
+  if (!isCompactViewport) {
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  if (!(activeInfoTooltipBadge instanceof HTMLElement) || !document.contains(activeInfoTooltipBadge)) {
+    activeInfoTooltipBadge = null;
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  const sourceTooltip = activeInfoTooltipBadge.querySelector(".table-info-tooltip");
+  if (!(sourceTooltip instanceof HTMLElement)) {
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  const tooltip = ensureFloatingInfoTooltip();
+  if (!(tooltip instanceof HTMLElement)) {
+    return;
+  }
+
+  tooltip.textContent = sourceTooltip.textContent || "";
+  tooltip.classList.remove("is-above");
+  tooltip.classList.add("is-visible");
+  tooltip.style.left = "0px";
+  tooltip.style.top = "0px";
+  tooltip.style.right = "auto";
+  tooltip.style.setProperty("--tooltip-x-shift", "0px");
+  tooltip.style.setProperty("--tooltip-arrow-shift", "0px");
+
+  const tooltipWidth = tooltip.offsetWidth;
+  const tooltipHeight = tooltip.offsetHeight;
+  if (!tooltipWidth || !tooltipHeight) {
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  const viewportGutter = window.innerWidth <= 720 ? 14 : 18;
+  const badgeRect = activeInfoTooltipBadge.getBoundingClientRect();
+  const desiredLeft = badgeRect.left + (badgeRect.width / 2) - (tooltipWidth / 2);
+  const maxLeft = Math.max(viewportGutter, window.innerWidth - viewportGutter - tooltipWidth);
+  const clampedLeft = clampNumber(desiredLeft, viewportGutter, maxLeft);
+  const arrowLeft = clampNumber((badgeRect.width / 2) + badgeRect.left - clampedLeft, 18, tooltipWidth - 18);
+  const preferredTop = badgeRect.bottom + 10;
+  const showAbove = preferredTop + tooltipHeight > window.innerHeight - viewportGutter
+    && badgeRect.top - tooltipHeight - 10 >= viewportGutter;
+  const alignedTop = showAbove
+    ? badgeRect.top - tooltipHeight - 10
+    : preferredTop;
+
+  tooltip.classList.toggle("is-above", showAbove);
+  tooltip.style.left = `${clampedLeft}px`;
+  tooltip.style.top = `${alignedTop}px`;
+  tooltip.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
+}
+
+function ensureFloatingInfoTooltip() {
+  if (floatingInfoTooltip instanceof HTMLElement && document.body.contains(floatingInfoTooltip)) {
+    return floatingInfoTooltip;
+  }
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  floatingInfoTooltip = document.createElement("div");
+  floatingInfoTooltip.className = "table-info-tooltip floating-info-tooltip";
+  floatingInfoTooltip.setAttribute("aria-hidden", "true");
+  document.body.append(floatingInfoTooltip);
+  return floatingInfoTooltip;
+}
+
+function hideFloatingInfoTooltip() {
+  if (!(floatingInfoTooltip instanceof HTMLElement)) {
+    return;
+  }
+
+  floatingInfoTooltip.classList.remove("is-visible");
+}
+
+function resetInfoTooltipAlignment(tooltip) {
+  tooltip.style.removeProperty("top");
+  tooltip.style.removeProperty("left");
+  tooltip.style.removeProperty("right");
+  tooltip.style.removeProperty("--tooltip-x-shift");
+  tooltip.style.removeProperty("--tooltip-arrow-left");
+  tooltip.style.removeProperty("--tooltip-arrow-shift");
+}
+
+function clampNumber(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function renderLandingView() {
   return `
     <section class="landing-shell">
@@ -661,15 +890,15 @@ function renderLandingView() {
         <p class="eyebrow">Spotify Streaming History Analysis</p>
         <h1>Upload your Spotify Streaming History ZIP</h1>
         <p class="hero-copy">
-          Explore your Spotify music listening history in a fast, privacy-first browser dashboard.
+          Explore your Spotify music listening history in a fast, privacy-first browser dashboard. No login required.
           Your Spotify data stays in your browser and is not uploaded to a server.
-          This site is independent and is not affiliated with, endorsed by, or sponsored by Spotify.
           Podcast and audiobook plays are excluded from these stats.
           Leave the dates blank to analyze your full listening history, or use the calendar inputs to focus on a specific period.
+          This site is independent and is not affiliated with, endorsed by, or sponsored by Spotify.
         </p>
 
         <div class="landing-link-row">
-          <a href="./instructions.html" class="secondary-link">How to get your Spotify ZIP</a>
+          <a href="./instructions.html" class="secondary-link">How to get your Spotify Streaming Data</a>
         </div>
 
         ${state.errorMessage ? `<div class="error-banner">${escapeHtml(state.errorMessage)}</div>` : ""}
@@ -971,13 +1200,16 @@ function renderStatCard(label, value, subtext, infoText = "") {
 
 function renderChartsSection() {
   const revealKey = "charts-section";
+  const chartInteractionCopy = prefersTapChartInteraction()
+    ? "Tap any bar to see both playtime and play count."
+    : "Hover any bar to see both playtime and play count.";
 
   return `
     <section class="${buildRevealSectionClassName("chart-section", revealKey)}" id="charts-section" data-reveal-section="${escapeAttribute(revealKey)}">
       <div class="chart-section-header">
         <h2>Charts</h2>
         <p class="chart-section-copy">
-          Bars show total playtime for each time bucket. Hover any bar to see both playtime and play count.
+          Bars show total playtime for each time bucket. ${escapeHtml(chartInteractionCopy)}
         </p>
       </div>
 
@@ -1023,6 +1255,9 @@ function renderDailyInsightsCard(insights) {
 
 function renderTableSection(title, headers, items, rowRenderer, tableClass = "", infoText = "", sectionId = "") {
   const revealKey = sectionId || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const isCompactTable = !tableClass;
+  const tableModeClass = isCompactTable ? "table--compact" : "table--scroll";
+  const shellModeClass = isCompactTable ? "table-shell--compact" : "table-shell--scroll";
 
   return `
     <section class="table-section" ${sectionId ? `id="${escapeAttribute(sectionId)}"` : ""}>
@@ -1030,10 +1265,11 @@ function renderTableSection(title, headers, items, rowRenderer, tableClass = "",
         <h2>${escapeHtml(title)}</h2>
         ${infoText ? renderTableInfoBadge(title, infoText) : ""}
       </div>
-      <div class="${buildRevealSectionClassName("table-shell", revealKey)}" data-reveal-section="${escapeAttribute(revealKey)}">
-        <table class="${escapeAttribute(tableClass)}">
+      <div class="${buildRevealSectionClassName(`table-shell ${shellModeClass}`, revealKey)}" data-reveal-section="${escapeAttribute(revealKey)}">
+        ${isCompactTable ? "" : '<p class="table-scroll-hint">Swipe horizontally to see more columns.</p>'}
+        <table class="${escapeAttribute([tableModeClass, tableClass].filter(Boolean).join(" "))}">
           <thead>
-            <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr>
+            <tr>${headers.map((header, index) => renderTableHeaderCell(header, index)).join("")}</tr>
           </thead>
           <tbody>
             ${items.map(rowRenderer).join("")}
@@ -1065,6 +1301,8 @@ function renderInfoBadge(label, infoText, className = "table-info-badge") {
     <span
       class="${escapeAttribute(className)}"
       tabindex="0"
+      role="button"
+      aria-expanded="false"
       aria-label="${escapeAttribute(`${label}. ${infoText}`)}"
     >
       <span class="table-info-icon" aria-hidden="true">i</span>
@@ -1076,9 +1314,9 @@ function renderInfoBadge(label, infoText, className = "table-info-badge") {
 function renderSongRow(song) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(song.rank))}</td>
-      <td>${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
-      <td>${escapeHtml(song.playtime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(song.rank))}</td>
+      <td data-label="Song">${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
+      <td data-label="Playtime">${escapeHtml(song.playtime)}</td>
     </tr>
   `;
 }
@@ -1086,9 +1324,9 @@ function renderSongRow(song) {
 function renderSongCountRow(song) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(song.rank))}</td>
-      <td>${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
-      <td>${escapeHtml(song.times_played.toLocaleString())}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(song.rank))}</td>
+      <td data-label="Song">${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
+      <td data-label="Play Count">${escapeHtml(song.times_played.toLocaleString())}</td>
     </tr>
   `;
 }
@@ -1096,10 +1334,10 @@ function renderSongCountRow(song) {
 function renderSongDailyPeakRow(song) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(song.rank))}</td>
-      <td>${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
-      <td>${escapeHtml(song.times_played.toLocaleString())}</td>
-      <td class="date-cell">${escapeHtml(song.date)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(song.rank))}</td>
+      <td data-label="Song">${renderLinkedLabel(song.uri, displayName(song.track), displayName(song.artist), `${displayName(song.track)} cover art`)}</td>
+      <td data-label="Play Count">${escapeHtml(song.times_played.toLocaleString())}</td>
+      <td class="date-cell" data-label="Date">${escapeHtml(song.date)}</td>
     </tr>
   `;
 }
@@ -1107,9 +1345,9 @@ function renderSongDailyPeakRow(song) {
 function renderArtistRow(artist) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(artist.rank))}</td>
-      <td>${escapeHtml(displayName(artist.artist))}</td>
-      <td>${escapeHtml(artist.playtime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(artist.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(artist.artist))}</td>
+      <td data-label="Playtime">${escapeHtml(artist.playtime)}</td>
     </tr>
   `;
 }
@@ -1117,9 +1355,9 @@ function renderArtistRow(artist) {
 function renderArtistCountRow(artist) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(artist.rank))}</td>
-      <td>${escapeHtml(displayName(artist.artist))}</td>
-      <td>${escapeHtml(artist.times_played.toLocaleString())}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(artist.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(artist.artist))}</td>
+      <td data-label="Play Count">${escapeHtml(artist.times_played.toLocaleString())}</td>
     </tr>
   `;
 }
@@ -1127,10 +1365,10 @@ function renderArtistCountRow(artist) {
 function renderArtistDailyPeakRow(artist) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(artist.rank))}</td>
-      <td>${escapeHtml(displayName(artist.artist))}</td>
-      <td>${escapeHtml(artist.times_played.toLocaleString())}</td>
-      <td class="date-cell">${escapeHtml(artist.date)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(artist.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(artist.artist))}</td>
+      <td data-label="Play Count">${escapeHtml(artist.times_played.toLocaleString())}</td>
+      <td class="date-cell" data-label="Date">${escapeHtml(artist.date)}</td>
     </tr>
   `;
 }
@@ -1138,9 +1376,9 @@ function renderArtistDailyPeakRow(artist) {
 function renderAlbumRow(album) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(album.rank))}</td>
-      <td>${renderLinkedLabel(album.uri, displayName(album.album), displayName(album.artist), `${displayName(album.album)} cover art`)}</td>
-      <td>${escapeHtml(album.playtime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(album.rank))}</td>
+      <td data-label="Album">${renderLinkedLabel(album.uri, displayName(album.album), displayName(album.artist), `${displayName(album.album)} cover art`)}</td>
+      <td data-label="Playtime">${escapeHtml(album.playtime)}</td>
     </tr>
   `;
 }
@@ -1148,10 +1386,10 @@ function renderAlbumRow(album) {
 function renderListeningStreakRow(streak) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(streak.rank))}</td>
-      <td>${escapeHtml(streak.playtime)}</td>
-      <td class="datetime-cell">${escapeHtml(streak.start_datetime)}</td>
-      <td class="datetime-cell">${escapeHtml(streak.end_datetime)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(streak.rank))}</td>
+      <td data-label="Playtime">${escapeHtml(streak.playtime)}</td>
+      <td class="datetime-cell" data-label="Start">${renderDateTimeValue(streak.start_datetime)}</td>
+      <td class="datetime-cell" data-label="End">${renderDateTimeValue(streak.end_datetime)}</td>
     </tr>
   `;
 }
@@ -1159,12 +1397,12 @@ function renderListeningStreakRow(streak) {
 function renderArtistStreakRow(streak) {
   return `
     <tr>
-      <td class="rank">${escapeHtml(String(streak.rank))}</td>
-      <td>${escapeHtml(displayName(streak.artist))}</td>
-      <td>${escapeHtml(streak.play_count.toLocaleString())}</td>
-      <td>${escapeHtml(streak.unique_songs.toLocaleString())}</td>
-      <td class="datetime-cell">${escapeHtml(streak.first_play)}</td>
-      <td class="datetime-cell">${escapeHtml(streak.last_play)}</td>
+      <td class="rank" data-label="Rank">${escapeHtml(String(streak.rank))}</td>
+      <td data-label="Artist">${escapeHtml(displayName(streak.artist))}</td>
+      <td data-label="Play Count">${escapeHtml(streak.play_count.toLocaleString())}</td>
+      <td data-label="Unique Songs">${escapeHtml(streak.unique_songs.toLocaleString())}</td>
+      <td class="datetime-cell" data-label="First Play">${renderDateTimeValue(streak.first_play)}</td>
+      <td class="datetime-cell" data-label="Last Play">${renderDateTimeValue(streak.last_play)}</td>
     </tr>
   `;
 }
@@ -1318,7 +1556,7 @@ function safeSpotifyHref(uri) {
       return "";
     }
 
-    return `https://open.spotify.com/${type}/${encodeURIComponent(id)}`;
+  return `https://open.spotify.com/${type}/${encodeURIComponent(id)}`;
   }
 
   if (trimmedUri.startsWith("https://open.spotify.com/")) {
@@ -1335,6 +1573,45 @@ function safeSpotifyHref(uri) {
   }
 
   return "";
+}
+
+function renderTableHeaderCell(header, index) {
+  const classNames = [];
+  if (index === 0 && String(header || "").trim().toLowerCase() === "rank") {
+    classNames.push("table-heading-rank");
+  }
+
+  return `<th${classNames.length ? ` class="${escapeAttribute(classNames.join(" "))}"` : ""}>${escapeHtml(header)}</th>`;
+}
+
+function renderDateTimeValue(value) {
+  const [datePart, timePart] = splitDateTimeValue(value);
+  if (!timePart) {
+    return escapeHtml(datePart);
+  }
+
+  return `
+    <span class="datetime-value">
+      <span class="datetime-date">${escapeHtml(datePart)}</span><span class="datetime-separator">, </span><span class="datetime-time">${escapeHtml(timePart)}</span>
+    </span>
+  `;
+}
+
+function splitDateTimeValue(value) {
+  const trimmedValue = String(value || "").trim();
+  if (!trimmedValue) {
+    return ["", ""];
+  }
+
+  const separatorIndex = trimmedValue.lastIndexOf(", ");
+  if (separatorIndex < 0) {
+    return [trimmedValue, ""];
+  }
+
+  return [
+    trimmedValue.slice(0, separatorIndex),
+    trimmedValue.slice(separatorIndex + 2),
+  ];
 }
 
 function nextRequestId() {

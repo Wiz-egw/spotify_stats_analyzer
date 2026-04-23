@@ -1088,7 +1088,7 @@ export function formatPlaytime(milliseconds) {
   const minutes = Math.floor((safeMilliseconds % 3600000) / 60000);
 
   if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+    return `${formatHoursCount(hours)}h ${String(minutes).padStart(2, "0")}m`;
   }
 
   return `${String(minutes).padStart(2, "0")}m`;
@@ -1108,7 +1108,7 @@ function formatNarrativePlaytime(milliseconds) {
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+    return `${formatHoursCount(hours)}h ${String(minutes).padStart(2, "0")}m`;
   }
 
   if (minutes > 0 && seconds > 0) {
@@ -1120,6 +1120,10 @@ function formatNarrativePlaytime(milliseconds) {
   }
 
   return `${seconds}s`;
+}
+
+function formatHoursCount(hours) {
+  return Number(hours).toLocaleString("en-US");
 }
 
 function finalizeListeningStreak(streak) {

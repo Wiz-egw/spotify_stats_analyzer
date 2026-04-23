@@ -1,5 +1,6 @@
 import {
   buildAnalysisContext,
+  formatPlaytime,
   parseTopLimit,
   rankAlbums,
   rankArtistDailyPeaks,
@@ -177,6 +178,15 @@ const checks = [
       totalPlayCount: 10,
       uniqueTracks: 8,
       uniqueAlbums: 1,
+    },
+  },
+  {
+    name: "Large hour playtime strings include thousands separators",
+    run: () => ({
+      cardPlaytime: formatPlaytime(1234 * 3600000 + 5 * 60000),
+    }),
+    expected: {
+      cardPlaytime: "1,234h 05m",
     },
   },
   {

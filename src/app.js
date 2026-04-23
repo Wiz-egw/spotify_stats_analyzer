@@ -867,9 +867,7 @@ function hideFloatingInfoTooltip() {
     return;
   }
 
-  floatingInfoTooltip.classList.remove("is-visible", "is-above");
-  floatingInfoTooltip.textContent = "";
-  resetInfoTooltipAlignment(floatingInfoTooltip);
+  floatingInfoTooltip.classList.remove("is-visible");
 }
 
 function resetInfoTooltipAlignment(tooltip) {
@@ -900,7 +898,7 @@ function renderLandingView() {
         </p>
 
         <div class="landing-link-row">
-          <a href="./instructions.html" class="secondary-link">How to get your Spotify ZIP</a>
+          <a href="./instructions.html" class="secondary-link">How to get your Spotify Streaming Data</a>
         </div>
 
         ${state.errorMessage ? `<div class="error-banner">${escapeHtml(state.errorMessage)}</div>` : ""}

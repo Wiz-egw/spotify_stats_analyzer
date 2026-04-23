@@ -932,12 +932,12 @@ td:nth-child(1) {
 
 th:nth-child(2),
 td:nth-child(2) {
-  width: 63%;
+  width: 65%;
 }
 
 th:nth-child(3),
 td:nth-child(3) {
-  width: 27%;
+  width: 25%;
   text-align: right;
 }
 

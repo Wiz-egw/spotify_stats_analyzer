@@ -42,6 +42,8 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -51,6 +53,7 @@ body {
   flex-direction: column;
   position: relative;
   overflow-x: hidden;
+  overflow-x: clip;
   background-color: var(--bg-base);
   background:
     radial-gradient(circle at top left, rgba(86, 209, 137, 0.2), transparent 28%),
@@ -1452,7 +1455,11 @@ td:nth-child(3) {
 
   .table-info-tooltip,
   .summary-info-badge .table-info-tooltip {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: min(300px, calc(100vw - 36px));
+    z-index: 30;
   }
 
   .table-info-badge:hover .table-info-tooltip,

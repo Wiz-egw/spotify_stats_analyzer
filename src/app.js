@@ -205,6 +205,10 @@ window.addEventListener("resize", () => {
   scheduleInfoTooltipAlignment();
 });
 
+window.addEventListener("scroll", () => {
+  scheduleInfoTooltipAlignment();
+}, { passive: true });
+
 render();
 
 function syncSelectedUploadDisplay(fileInput) {
@@ -715,10 +719,10 @@ function refreshInfoTooltipAlignment() {
     const desiredLeft = badgeRect.left + (badgeRect.width / 2) - (tooltipWidth / 2);
     const maxLeft = Math.max(viewportGutter, window.innerWidth - viewportGutter - tooltipWidth);
     const clampedLeft = clampNumber(desiredLeft, viewportGutter, maxLeft);
-    const tooltipLeftWithinBadge = clampedLeft - badgeRect.left;
     const arrowLeft = clampNumber((badgeRect.width / 2) + badgeRect.left - clampedLeft, 18, tooltipWidth - 18);
 
-    tooltip.style.left = `${tooltipLeftWithinBadge}px`;
+    tooltip.style.left = `${clampedLeft}px`;
+    tooltip.style.top = `${badgeRect.bottom + 10}px`;
     tooltip.style.right = "auto";
     tooltip.style.setProperty("--tooltip-x-shift", "0px");
     tooltip.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
@@ -727,6 +731,7 @@ function refreshInfoTooltipAlignment() {
 }
 
 function resetInfoTooltipAlignment(tooltip) {
+  tooltip.style.removeProperty("top");
   tooltip.style.removeProperty("left");
   tooltip.style.removeProperty("right");
   tooltip.style.removeProperty("--tooltip-x-shift");

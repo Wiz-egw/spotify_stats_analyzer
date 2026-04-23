@@ -54,6 +54,7 @@ let artworkRenderTimer = 0;
 let revealSectionObserver = null;
 let infoTooltipAlignmentFrame = 0;
 let activeInfoTooltipBadge = null;
+let floatingInfoTooltip = null;
 
 const state = {
   analysis: null,
@@ -477,6 +478,7 @@ function ensureWorker() {
 function render() {
   teardownSectionObservers();
   activeInfoTooltipBadge = null;
+  hideFloatingInfoTooltip();
 
   document.title = state.analysis ? "Your Spotify Stats" : "Spotify Stats Analyzer";
   app.innerHTML = state.analysis ? renderResultsView() : renderLandingView();
@@ -734,6 +736,8 @@ function prefersTapInfoTooltipInteraction() {
 }
 
 function closeActiveInfoTooltipBadge() {
+  hideFloatingInfoTooltip();
+
   if (!(activeInfoTooltipBadge instanceof HTMLElement)) {
     activeInfoTooltipBadge = null;
     return;
@@ -770,7 +774,7 @@ function refreshInfoTooltipAlignment() {
   }
 
   const isCompactViewport = window.innerWidth <= 1024;
-  const badges = document.querySelectorAll(".table-info-badge, .summary-info-badge");
+  const badges = document.querySelectorAll(INFO_BADGE_SELECTOR);
 
   badges.forEach((badge) => {
     if (!(badge instanceof HTMLElement)) {
@@ -783,30 +787,89 @@ function refreshInfoTooltipAlignment() {
     }
 
     resetInfoTooltipAlignment(tooltip);
-
-    if (!isCompactViewport) {
-      return;
-    }
-
-    const tooltipWidth = tooltip.offsetWidth;
-    if (!tooltipWidth) {
-      return;
-    }
-
-    const viewportGutter = window.innerWidth <= 720 ? 14 : 18;
-    const badgeRect = badge.getBoundingClientRect();
-    const desiredLeft = badgeRect.left + (badgeRect.width / 2) - (tooltipWidth / 2);
-    const maxLeft = Math.max(viewportGutter, window.innerWidth - viewportGutter - tooltipWidth);
-    const clampedLeft = clampNumber(desiredLeft, viewportGutter, maxLeft);
-    const arrowLeft = clampNumber((badgeRect.width / 2) + badgeRect.left - clampedLeft, 18, tooltipWidth - 18);
-
-    tooltip.style.left = `${clampedLeft}px`;
-    tooltip.style.top = `${badgeRect.bottom + 10}px`;
-    tooltip.style.right = "auto";
-    tooltip.style.setProperty("--tooltip-x-shift", "0px");
-    tooltip.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
-    tooltip.style.setProperty("--tooltip-arrow-shift", "0px");
   });
+
+  if (!isCompactViewport) {
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  if (!(activeInfoTooltipBadge instanceof HTMLElement) || !document.contains(activeInfoTooltipBadge)) {
+    activeInfoTooltipBadge = null;
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  const sourceTooltip = activeInfoTooltipBadge.querySelector(".table-info-tooltip");
+  if (!(sourceTooltip instanceof HTMLElement)) {
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  const tooltip = ensureFloatingInfoTooltip();
+  if (!(tooltip instanceof HTMLElement)) {
+    return;
+  }
+
+  tooltip.textContent = sourceTooltip.textContent || "";
+  tooltip.classList.remove("is-above");
+  tooltip.classList.add("is-visible");
+  tooltip.style.left = "0px";
+  tooltip.style.top = "0px";
+  tooltip.style.right = "auto";
+  tooltip.style.setProperty("--tooltip-x-shift", "0px");
+  tooltip.style.setProperty("--tooltip-arrow-shift", "0px");
+
+  const tooltipWidth = tooltip.offsetWidth;
+  const tooltipHeight = tooltip.offsetHeight;
+  if (!tooltipWidth || !tooltipHeight) {
+    hideFloatingInfoTooltip();
+    return;
+  }
+
+  const viewportGutter = window.innerWidth <= 720 ? 14 : 18;
+  const badgeRect = activeInfoTooltipBadge.getBoundingClientRect();
+  const desiredLeft = badgeRect.left + (badgeRect.width / 2) - (tooltipWidth / 2);
+  const maxLeft = Math.max(viewportGutter, window.innerWidth - viewportGutter - tooltipWidth);
+  const clampedLeft = clampNumber(desiredLeft, viewportGutter, maxLeft);
+  const arrowLeft = clampNumber((badgeRect.width / 2) + badgeRect.left - clampedLeft, 18, tooltipWidth - 18);
+  const preferredTop = badgeRect.bottom + 10;
+  const showAbove = preferredTop + tooltipHeight > window.innerHeight - viewportGutter
+    && badgeRect.top - tooltipHeight - 10 >= viewportGutter;
+  const alignedTop = showAbove
+    ? badgeRect.top - tooltipHeight - 10
+    : preferredTop;
+
+  tooltip.classList.toggle("is-above", showAbove);
+  tooltip.style.left = `${clampedLeft}px`;
+  tooltip.style.top = `${alignedTop}px`;
+  tooltip.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
+}
+
+function ensureFloatingInfoTooltip() {
+  if (floatingInfoTooltip instanceof HTMLElement && document.body.contains(floatingInfoTooltip)) {
+    return floatingInfoTooltip;
+  }
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  floatingInfoTooltip = document.createElement("div");
+  floatingInfoTooltip.className = "table-info-tooltip floating-info-tooltip";
+  floatingInfoTooltip.setAttribute("aria-hidden", "true");
+  document.body.append(floatingInfoTooltip);
+  return floatingInfoTooltip;
+}
+
+function hideFloatingInfoTooltip() {
+  if (!(floatingInfoTooltip instanceof HTMLElement)) {
+    return;
+  }
+
+  floatingInfoTooltip.classList.remove("is-visible", "is-above");
+  floatingInfoTooltip.textContent = "";
+  resetInfoTooltipAlignment(floatingInfoTooltip);
 }
 
 function resetInfoTooltipAlignment(tooltip) {

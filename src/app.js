@@ -41,6 +41,7 @@ const SUMMARY_INFO_TEXT = {
 const INITIAL_REVEAL_SECTION_IDS = new Set([
   "summary-stats-section",
 ]);
+const INFO_BADGE_SELECTOR = ".table-info-badge, .summary-info-badge";
 let worker = null;
 let artworkQueue = [];
 const artworkByHref = new Map();
@@ -52,6 +53,7 @@ let artworkEpoch = 0;
 let artworkRenderTimer = 0;
 let revealSectionObserver = null;
 let infoTooltipAlignmentFrame = 0;
+let activeInfoTooltipBadge = null;
 
 const state = {
   analysis: null,
@@ -95,6 +97,17 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  const infoBadge = target.closest(INFO_BADGE_SELECTOR);
+  if (prefersTapInfoTooltipInteraction()) {
+    if (infoBadge instanceof HTMLElement) {
+      event.preventDefault();
+      toggleInfoTooltipBadge(infoBadge);
+      return;
+    }
+
+    closeActiveInfoTooltipBadge();
+  }
+
   const toggleButton = target.closest("[data-toggle-panel]");
   if (toggleButton instanceof HTMLButtonElement) {
     const panelName = toggleButton.dataset.togglePanel;
@@ -127,6 +140,7 @@ app.addEventListener("click", (event) => {
   const limitButton = target.closest("[data-top-limit]");
   if (limitButton instanceof HTMLButtonElement) {
     event.preventDefault();
+    state.panels.topLimit = false;
     runAnalysis({
       startDate: state.analysis?.selectedStartDate || "",
       endDate: state.analysis?.selectedEndDate || "",
@@ -143,6 +157,32 @@ app.addEventListener("click", (event) => {
     }
 
     worker.postMessage({ type: "clear-data", requestId: nextRequestId() });
+  }
+});
+
+app.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeActiveInfoTooltipBadge();
+    return;
+  }
+
+  if (!prefersTapInfoTooltipInteraction()) {
+    return;
+  }
+
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const infoBadge = target.closest(INFO_BADGE_SELECTOR);
+  if (!(infoBadge instanceof HTMLElement)) {
+    return;
+  }
+
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    toggleInfoTooltipBadge(infoBadge);
   }
 });
 
@@ -202,6 +242,9 @@ app.addEventListener("drop", (event) => {
 });
 
 window.addEventListener("resize", () => {
+  if (!prefersTapInfoTooltipInteraction()) {
+    closeActiveInfoTooltipBadge();
+  }
   scheduleInfoTooltipAlignment();
 });
 
@@ -433,6 +476,7 @@ function ensureWorker() {
 
 function render() {
   teardownSectionObservers();
+  activeInfoTooltipBadge = null;
 
   document.title = state.analysis ? "Your Spotify Stats" : "Spotify Stats Analyzer";
   app.innerHTML = state.analysis ? renderResultsView() : renderLandingView();
@@ -683,6 +727,41 @@ function scheduleInfoTooltipAlignment() {
     infoTooltipAlignmentFrame = 0;
     refreshInfoTooltipAlignment();
   });
+}
+
+function prefersTapInfoTooltipInteraction() {
+  return typeof window !== "undefined" && window.innerWidth <= 1024;
+}
+
+function closeActiveInfoTooltipBadge() {
+  if (!(activeInfoTooltipBadge instanceof HTMLElement)) {
+    activeInfoTooltipBadge = null;
+    return;
+  }
+
+  activeInfoTooltipBadge.blur();
+  activeInfoTooltipBadge.classList.remove("is-open");
+  activeInfoTooltipBadge.setAttribute("aria-expanded", "false");
+  activeInfoTooltipBadge = null;
+}
+
+function toggleInfoTooltipBadge(badge) {
+  if (!(badge instanceof HTMLElement)) {
+    return;
+  }
+
+  const isAlreadyOpen = activeInfoTooltipBadge === badge && badge.classList.contains("is-open");
+  if (isAlreadyOpen) {
+    closeActiveInfoTooltipBadge();
+    badge.blur();
+    return;
+  }
+
+  closeActiveInfoTooltipBadge();
+  badge.classList.add("is-open");
+  badge.setAttribute("aria-expanded", "true");
+  activeInfoTooltipBadge = badge;
+  scheduleInfoTooltipAlignment();
 }
 
 function refreshInfoTooltipAlignment() {
@@ -1161,6 +1240,8 @@ function renderInfoBadge(label, infoText, className = "table-info-badge") {
     <span
       class="${escapeAttribute(className)}"
       tabindex="0"
+      role="button"
+      aria-expanded="false"
       aria-label="${escapeAttribute(`${label}. ${infoText}`)}"
     >
       <span class="table-info-icon" aria-hidden="true">i</span>

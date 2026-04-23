@@ -718,7 +718,8 @@ p {
 }
 
 .summary-info-badge:hover,
-.summary-info-badge:focus {
+.summary-info-badge:focus,
+.summary-info-badge.is-open {
   border-color: var(--spotify);
   color: var(--text-main);
   background: rgba(29, 185, 84, 0.12);
@@ -787,7 +788,8 @@ p {
 }
 
 .table-info-badge:hover,
-.table-info-badge:focus {
+.table-info-badge:focus,
+.table-info-badge.is-open {
   border-color: var(--spotify);
   color: var(--text-main);
   background: rgba(29, 185, 84, 0.12);
@@ -838,8 +840,10 @@ p {
 
 .table-info-badge:hover .table-info-tooltip,
 .table-info-badge:focus .table-info-tooltip,
+.table-info-badge.is-open .table-info-tooltip,
 .summary-info-badge:hover .table-info-tooltip,
-.summary-info-badge:focus .table-info-tooltip {
+.summary-info-badge:focus .table-info-tooltip,
+.summary-info-badge.is-open .table-info-tooltip {
   opacity: 1;
   transform: translateX(var(--tooltip-x-shift, 0px)) translateY(0);
 }
@@ -1466,6 +1470,13 @@ td:nth-child(3) {
   .table-info-badge:focus .table-info-tooltip,
   .summary-info-badge:hover .table-info-tooltip,
   .summary-info-badge:focus .table-info-tooltip {
+    opacity: 0;
+    transform: translateX(var(--tooltip-x-shift, 0px)) translateY(6px);
+  }
+
+  .table-info-badge.is-open .table-info-tooltip,
+  .summary-info-badge.is-open .table-info-tooltip {
+    opacity: 1;
     transform: translateX(var(--tooltip-x-shift, 0px)) translateY(0);
   }
 
